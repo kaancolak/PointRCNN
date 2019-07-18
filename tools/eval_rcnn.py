@@ -22,7 +22,6 @@ import time
 from tensorboardX import SummaryWriter
 import tqdm
 
-
 np.random.seed(1024)  # set the same seed
 
 parser = argparse.ArgumentParser(description="arg parser")
@@ -483,20 +482,54 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
     cnt = final_total = total_cls_acc = total_cls_acc_refined = total_rpn_iou = 0
 
     progress_bar = tqdm.tqdm(total=len(dataloader), leave=True, desc='eval')
+    # print(type(dataloader))
     for data in dataloader:
         cnt += 1
+        # print(data)
         sample_id, pts_rect, pts_features, pts_input = \
             data['sample_id'], data['pts_rect'], data['pts_features'], data['pts_input']
         batch_size = len(sample_id)
+        print(pts_input.shape)
+        print(type(pts_input))
+
         inputs = torch.from_numpy(pts_input).cuda(non_blocking=True).float()
+        print("---------")
+        print(inputs.shape)
+        print("Inputs shape :")
+        print(inputs)
+        # print(inputs.size)
         input_data = {'pts_input': inputs}
 
+        # print(input_data)
         # model inference
         ret_dict = model(input_data)
-
+        # print("-----------------------------")
+        # print("-----------------------------")
+        # print("-----------------------------")
+        #
+        # print(ret_dict)
+        print("---------")
         roi_scores_raw = ret_dict['roi_scores_raw']  # (B, M)
         roi_boxes3d = ret_dict['rois']  # (B, M, 7)
+        # print("-----------------------------")
+        # print("-----------------------------")
+        # print("-----------------------------")
+        # print(roi_boxes3d)
         seg_result = ret_dict['seg_result'].long()  # (B, N)
+
+        seg_result_numpy = seg_result.cpu().detach().numpy()
+        print(seg_result_numpy.shape)
+
+        counter = 0
+        counter2 = 0
+        for x in np.nditer(seg_result_numpy):
+            if x == 1:
+                counter = counter + 1
+            elif x == 0:
+                counter2 = counter2 + 1
+
+        print(counter)
+        print(counter2)
 
         rcnn_cls = ret_dict['rcnn_cls'].view(batch_size, -1, ret_dict['rcnn_cls'].shape[1])
         rcnn_reg = ret_dict['rcnn_reg'].view(batch_size, -1, ret_dict['rcnn_reg'].shape[1])  # (B, M, C)
@@ -514,7 +547,7 @@ def eval_one_epoch_joint(model, dataloader, epoch_id, result_dir, logger):
                                           get_xz_fine=True, get_y_by_bin=cfg.RCNN.LOC_Y_BY_BIN,
                                           loc_y_scope=cfg.RCNN.LOC_Y_SCOPE, loc_y_bin_size=cfg.RCNN.LOC_Y_BIN_SIZE,
                                           get_ry_fine=True).view(batch_size, -1, 7)
-
+        # print(pred_boxes3d)
         # scoring
         if rcnn_cls.shape[2] == 1:
             raw_scores = rcnn_cls  # (B, M, 1)
@@ -717,7 +750,6 @@ def load_part_ckpt(model, filename, logger, total_keys=-1):
 def load_ckpt_based_on_args(model, logger):
     if args.ckpt is not None:
         train_utils.load_checkpoint(model, filename=args.ckpt, logger=logger)
-
     total_keys = model.state_dict().keys().__len__()
     if cfg.RPN.ENABLED and args.rpn_ckpt is not None:
         load_part_ckpt(model, filename=args.rpn_ckpt, logger=logger, total_keys=total_keys)
@@ -750,7 +782,6 @@ def eval_single_ckpt(root_result_dir):
     test_loader = create_dataloader(logger)
     model = PointRCNN(num_classes=test_loader.dataset.num_class, use_xyz=True, mode='TEST')
     model.cuda()
-
     # copy important files to backup
     backup_dir = os.path.join(root_result_dir, 'backup_files')
     os.makedirs(backup_dir, exist_ok=True)
@@ -863,6 +894,7 @@ if __name__ == "__main__":
     # merge config and log to file
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
+
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
     cfg.TAG = os.path.splitext(os.path.basename(args.cfg_file))[0]
@@ -898,5 +930,6 @@ if __name__ == "__main__":
         if args.eval_all:
             assert os.path.exists(ckpt_dir), '%s' % ckpt_dir
             repeat_eval_ckpt(root_result_dir, ckpt_dir)
+
         else:
             eval_single_ckpt(root_result_dir)

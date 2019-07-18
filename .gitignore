@@ -10,3 +10,7 @@
 **/*.egg-info
 **/dist
 tools/gt_database/
+.idea
+venv/
+final_result/
+planes/

@@ -68,6 +68,7 @@ def create_dataloader(logger):
                                  rcnn_training_roi_dir=args.rcnn_training_roi_dir,
                                  rcnn_training_feature_dir=args.rcnn_training_feature_dir,
                                  gt_database_dir=args.gt_database)
+
     train_loader = DataLoader(train_set, batch_size=args.batch_size, pin_memory=True,
                               num_workers=args.workers, shuffle=True, collate_fn=train_set.collate_batch,
                               drop_last=True)
