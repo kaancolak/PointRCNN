@@ -42,6 +42,9 @@ class RCNNNet(nn.Module):
             channel_in = mlps[-1]
 
         # classification layer
+        # TODO:change class size
+        # TODO: change classification layer
+
         cls_channel = 1 if num_classes == 2 else num_classes
         cls_layers = []
         pre_channel = channel_in

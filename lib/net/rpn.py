@@ -22,9 +22,10 @@ class RPN(nn.Module):
         for k in range(0, cfg.RPN.CLS_FC.__len__()):
             cls_layers.append(pt_utils.Conv1d(pre_channel, cfg.RPN.CLS_FC[k], bn=cfg.RPN.USE_BN))
             pre_channel = cfg.RPN.CLS_FC[k]
-        cls_layers.append(pt_utils.Conv1d(pre_channel, 1, activation=None))
+        cls_layers.append(pt_utils.Conv1d(pre_channel, 3, activation=None))
         if cfg.RPN.DP_RATIO >= 0:
             cls_layers.insert(1, nn.Dropout(cfg.RPN.DP_RATIO))
+        print(cls_layers)
         self.rpn_cls_layer = nn.Sequential(*cls_layers)
 
         # regression branch

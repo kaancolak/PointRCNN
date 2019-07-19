@@ -189,6 +189,8 @@ if __name__ == "__main__":
     os.system('cp ../lib/datasets/kitti_rcnn_dataset.py %s/' % backup_dir)
 
     # tensorboard log
+    print(root_result_dir)	
+    root_result_dir ="/home/kaan/projects/PointRCNN/output/rpn/default"
     tb_log = SummaryWriter(log_dir=os.path.join(root_result_dir, 'tensorboard'))
 
     # create dataloader & network & optimizer
